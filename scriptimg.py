@@ -23,7 +23,7 @@ while cap.isOpened():
     red = frame[:, :, 0]
 
     # Combine images with different weights
-    combined = cv2.addWeighted((blue), 0.05, green, 0.66, 0)
+    combined = cv2.addWeighted((blue), 0.15, green, 0.66, 0)
     combined = cv2.addWeighted(combined, 0.7, red, 0.52, 0)
 
     # Sharpen the combined image
@@ -48,10 +48,12 @@ while cap.isOpened():
     # Probabilistic Hough Line Transform
     linesP = cv2.HoughLinesP(edges, 5, np.pi / 180, 50, 50, 40)
     cv2.imshow("thresh", thresh)
-    cv2.imshow("sharpened", sharpened)  
+    cv2.imshow("sharpened", sharpened) 
+    ANDED = cv2.bitwise_or(thresh,sharpened)
+    cv2.imshow("anded", ANDED)
     # Detect and draw parallel lines
     if linesP is not None:
-        cdstP = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+        cdstP = cv2.cvtColor(ANDED, cv2.COLOR_GRAY2BGR)
         parallel_lines = []
         for line in linesP:
             x1, y1, x2, y2 = line[0]
@@ -77,7 +79,7 @@ while cap.isOpened():
             y_max = max(y1_1, y2_1, y1_2, y2_2)
 
             cv2.rectangle(cdstP, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
-
+        
         cv2.imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
