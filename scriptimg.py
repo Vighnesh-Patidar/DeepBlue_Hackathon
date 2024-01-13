@@ -8,7 +8,7 @@ def unsharp_mask(image, sigma=1.0, strength=1.5):
     return sharpened
 
 # Read the video file
-video_path = "video.mp4"
+video_path = "video3.mp4"
 cap = cv2.VideoCapture(video_path)
 
 while cap.isOpened():
@@ -40,7 +40,7 @@ while cap.isOpened():
     
     sharpened = cv2.bilateralFilter(sharpened, 6, 80, 80)
     sharpened = cv2.bitwise_not(sharpened)
-    ret, thresh = cv2.threshold(sharpened, 103, 255, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(sharpened, 101, 255, cv2.THRESH_BINARY)
     kernel = np.ones((5 ,5 ), np.uint8)
     edges = cv2.Canny(sharpened, 20, 150)
     cv2.imshow("edges", edges)
