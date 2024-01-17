@@ -8,8 +8,31 @@ def unsharp_mask(image, sigma=1.0, strength=1.5):
     return sharpened
 
 # Read the video file
-video_path = "video3.mp4"
+video_path = "video2.mp4"
 cap = cv2.VideoCapture(video_path)
+
+# Sharpen the combined image
+kernel_5x5 = np.array(
+    [
+        [-1, -1, -1, -1, -1],
+        [-1, 1, 2, 1, -1],
+        [-1, 2, 5, 2, -1],
+        [-1, 1, 2, 1, -1],
+        [-1, -1, -1, -1, -1],
+    ]
+)
+
+kernel_7x7 = np.array(
+    [
+        [-1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, 8, -1, -1, -1],
+        [-1, -1, 8, 13.5, 8, -1, -1],
+        [-1, -1, -1, 8, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1],
+        [-1, -1, -1, -1, -1, -1, -1]
+    ]
+)
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -23,24 +46,12 @@ while cap.isOpened():
     red = frame[:, :, 0]
 
     # Combine images with different weights
-    combined = cv2.addWeighted((blue), 0.15, green, 0.66, 0)
+    combined = cv2.addWeighted((blue), 0.05, green, 0.66, 0)
     combined = cv2.addWeighted(combined, 0.7, red, 0.52, 0)
-
-    # Sharpen the combined image
-    kernel = np.array(
-        [
-            [-1, -1, -1, -1, -1],
-            [-1, 1, 2, 1, -1],
-            [-1, 2, 5, 2, -1],
-            [-1, 1, 2, 1, -1],
-            [-1, -1, -1, -1, -1],
-        ]
-    )
-    sharpened = cv2.filter2D(combined, -1, kernel)
-    
+    sharpened = cv2.filter2D(combined, -1, kernel_7x7)
     sharpened = cv2.bilateralFilter(sharpened, 6, 80, 80)
     sharpened = cv2.bitwise_not(sharpened)
-    ret, thresh = cv2.threshold(sharpened, 101, 255, cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(sharpened, 110, 255, cv2.THRESH_BINARY)
     kernel = np.ones((5 ,5 ), np.uint8)
     edges = cv2.Canny(sharpened, 20, 150)
     cv2.imshow("edges", edges)
@@ -48,12 +59,10 @@ while cap.isOpened():
     # Probabilistic Hough Line Transform
     linesP = cv2.HoughLinesP(edges, 5, np.pi / 180, 50, 50, 40)
     cv2.imshow("thresh", thresh)
-    cv2.imshow("sharpened", sharpened) 
-    ANDED = cv2.bitwise_or(thresh,sharpened)
-    cv2.imshow("anded", ANDED)
+    cv2.imshow("sharpened", sharpened)  
     # Detect and draw parallel lines
     if linesP is not None:
-        cdstP = cv2.cvtColor(ANDED, cv2.COLOR_GRAY2BGR)
+        cdstP = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
         parallel_lines = []
         for line in linesP:
             x1, y1, x2, y2 = line[0]
@@ -79,8 +88,10 @@ while cap.isOpened():
             y_max = max(y1_1, y2_1, y1_2, y2_2)
 
             cv2.rectangle(cdstP, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
-        
+            cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), (255, 0, 0), 2)
+
         cv2.imshow("Detected Lines (in red) - Probabilistic Line Transform", cdstP)
+        cv2.imshow("SAXX", frame)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
